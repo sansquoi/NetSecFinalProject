@@ -7,23 +7,22 @@ from keyboard import is_pressed
 
 parser = ArgumentParser(description="ScroogeCoin")
 parser.add_argument(
-    "--name", "-n", type=str, default="output", help="The output file name"
+    "--name", "-n", type=str, default="output"
 )
 parser.add_argument(
     "--dontprint",
     "-d",
     dest="dontprint",
     action="store_true",
-    help="If you don't want to print anything (and just save the output in --name)",
 )
 parser.add_argument(
     "--initial",
     "-i",
     dest="initial",
     action="store_true",
-    help="print the initial transactions (The ones where scrooge creates the coins and pays the users)",
 )
 args = parser.parse_args()
+
 
 def generate_keys():
     private_key = SigningKey.generate()
@@ -50,7 +49,6 @@ def get_string_key(key):
 
 
 class Coin:
-
     coin_counter = 0
 
     def __init__(self):
@@ -84,6 +82,7 @@ class scroogeUser:
 
 class Transaction:
     trans_counter = 0
+
     def __init__(self, prev_hash, coins, sender_puk, receiver_puk):
         self.transcount = Transaction.trans_counter
         Transaction.trans_counter += 1
@@ -94,11 +93,11 @@ class Transaction:
         self.hash = sha256(
             bytes(
                 (
-                    "tx"
-                    + str(self.transcount)
-                    + str(self.coins)
-                    + str(sender_puk)
-                    + str(receiver_puk)
+                        "tx"
+                        + str(self.transcount)
+                        + str(self.coins)
+                        + str(sender_puk)
+                        + str(receiver_puk)
                 ),
                 encoding="ascii",
             )
@@ -113,33 +112,33 @@ class Transaction:
 
     def details(self):
         return (
-            "------------------------------------------------"
-            + "\n"
-            + "Trans ID\t: "
-            + str(self.ID)
-            + "\n"
-            + (
-                ("Prev Trans\t: " + str(self.prev_hash.thash) + "\n")
-                if self.prev_hash
-                else ""
-            )
-            + (
-                ("Sender\t\t: " + get_string_key(self.sender_puk))
-                if self.prev_hash
-                else "Sender\t\t: Scrooge *COINBASE (Newly Generated Coins)*"
-            )
-            + "\n"
-            + "Receiver\t: "
-            + get_string_key(self.receiver_puk)
-            + "\n"
-            + "Amount\t\t: "
-            + str(len(self.coins))
-            + " SC"
-            + "\n"
-            + "CoinsIDs\t: [ "
-            + str(self.coins[0].ID)
-            + " ]\n"
-            + "------------------------------------------------"
+                "------------------------------------------------"
+                + "\n"
+                + "Trans ID\t: "
+                + str(self.ID)
+                + "\n"
+                + (
+                    ("Prev Trans\t: " + str(self.prev_hash.thash) + "\n")
+                    if self.prev_hash
+                    else ""
+                )
+                + (
+                    ("Sender\t\t: " + get_string_key(self.sender_puk))
+                    if self.prev_hash
+                    else "Sender\t\t: Scrooge *COINBASE (Newly Generated Coins)*"
+                )
+                + "\n"
+                + "Receiver\t: "
+                + get_string_key(self.receiver_puk)
+                + "\n"
+                + "Amount\t\t: "
+                + str(len(self.coins))
+                + " SC"
+                + "\n"
+                + "CoinsIDs\t: [ "
+                + str(self.coins[0].ID)
+                + " ]\n"
+                + "------------------------------------------------"
         )
 
 
@@ -204,24 +203,24 @@ class Scrooge:
             for tr in block.transactions:
                 tids += str(tr.ID) + ", "
             outret += (
-                "<--"
-                + (
-                    ("(Previous block : " + str(block.prev_hash.thash))
-                    if block.prev_hash
-                    else "("
-                )
-                + " BlockID : "
-                + str(block.ID)
-                + " || Block Transactions' IDs : [ "
-                + tids[:-2]
-                + " ] )\n"
+                    "<--"
+                    + (
+                        ("(Previous block : " + str(block.prev_hash.thash))
+                        if block.prev_hash
+                        else "("
+                    )
+                    + " BlockID : "
+                    + str(block.ID)
+                    + " || Block Transactions' IDs : [ "
+                    + tids[:-2]
+                    + " ] )\n"
             )
         outret += (
-            "<-- ( Final H() : "
-            + str(self.final_hp.thash)
-            + " , signature : "
-            + str(self.final_hp.signature.hex())
-            + "\n"
+                "<-- ( Final H() : "
+                + str(self.final_hp.thash)
+                + " , signature : "
+                + str(self.final_hp.signature.hex())
+                + "\n"
         )
         outret += "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
         return outret
@@ -247,31 +246,22 @@ class Scrooge:
                         user.confirm_transaction(coins[i][0], False)
 
     def check_transaction(self, transaction):
-        # ❖ Upon detecting any transaction, scrooge verifies it by making sure the coin
-        # really belongs to the owner and it has not been spent before.
-
-        # Scrooge verifies the signature before accumulating the transaction.
-        # 5- Scrooge verifies that the transaction belongs to the owner.
         valid_transaction = verify_signature(
             transaction.sender_puk, str(transaction.hash), transaction.signature
         )
         if not valid_transaction:
             return 1
-        # 6- Scrooge verifies that the transaction is not a Double spending.
         for user in self.users:
             if transaction.sender_puk == user.public_key:
                 _sender = user
                 break
-        # the coin really belongs to the owner
         for coin in transaction.coins:
             if not (coin in _sender.coins):
                 return 2
-        # and it has not been spent before
         for trans in self.temp_block:
             if trans.prev_hash == transaction.prev_hash:
                 return 2
 
-        # if all checks pass -> valid transaction
         return 0
 
     def add_trans_to_temp_block(self, new_trans):
@@ -285,5 +275,3 @@ class Scrooge:
             outret2 += "Transaction_" + str(i) + " : " + self.temp_block[i].ID + "\n"
         outret2 += "################################################\n"
         return outret2
-
-
